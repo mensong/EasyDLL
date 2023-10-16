@@ -103,6 +103,20 @@ std::string replace(const char* pszSrc, const char* pszOld, const char* pszNew)
 	return strContent;
 }
 
+inline bool isTrue(const std::string& str)
+{
+	std::string s = str;
+	std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+	return (
+		s == "1" ||
+		s == "true" ||
+		s == "yes" ||
+		s == "sucess" ||
+		s == "ok" ||
+		s == "right"
+		);
+}
+
 using namespace argparse;
 
 int main(int argc, char** argv)
@@ -116,6 +130,14 @@ int main(int argc, char** argv)
 		.names({ "-d", "--dll" })
 		.description("DLL name or path.")
 		.required(true);
+	parser.add_argument()
+		.names({ "-i", "--dll_inc" })
+		.description("DLL include files.")
+		.required(false);
+	parser.add_argument()
+		.names({ "-s", "--inc_use_sys_quot" })
+		.description("Is include use system quot.")
+		.required(false);
 	parser.add_argument()
 		.names({ "-a", "--alias" })
 		.description("Wraper alias name.")
@@ -144,6 +166,8 @@ int main(int argc, char** argv)
 	std::string aliasName = parser.get<std::string>("a");
 	std::string excludeListFile = parser.get<std::string>("e");
 	std::string outputFile = parser.get<std::string>("o");
+	std::vector<std::string> includes = parser.get<std::vector<std::string>>("i");
+	bool sysQuot = isTrue(parser.get<std::string>("s"));
 
 	std::set<std::string> excludeExportNames;
 	if (!excludeListFile.empty())
@@ -182,13 +206,9 @@ int main(int argc, char** argv)
 		"#define DEF_PROC(name) decltype(::name)* name" EL
 		"#define SET_PROC(hDll, name) this->name = (decltype(::name)*)::GetProcAddress(hDll, #name)" << std::endl;
 
-	bool sysQuot = true;
-	std::vector<std::string> dllInc;
-	dllInc.push_back("ChakraCore.h");
-	dllInc.push_back("Core/CommonTypedefs.h");
-	for (size_t i = 0; i < dllInc.size(); i++)
+	for (size_t i = 0; i < includes.size(); i++)
 	{
-		ss << "#include " << (sysQuot ? "<" : "\"") << dllInc[i] << (sysQuot ? ">" : "\"") << std::endl;
+		ss << "#include " << (sysQuot ? "<" : "\"") << includes[i] << (sysQuot ? ">" : "\"") << std::endl;
 	}
 
 	ss <<
