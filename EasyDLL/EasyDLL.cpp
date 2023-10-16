@@ -226,25 +226,32 @@ int main(int argc, char** argv)
 		"" EL
 		"	static HMODULE LoadLibraryFromCurrentDir(const char* dllName)" EL
 		"	{" EL
-		"		char selfPath[MAX_PATH];" EL
-		"		MEMORY_BASIC_INFORMATION mbi;" EL
-		"		HMODULE hModule = ((::VirtualQuery(LoadLibraryFromCurrentDir, &mbi, sizeof(mbi)) != 0) ? (HMODULE)mbi.AllocationBase : NULL);" EL
-		"		::GetModuleFileNameA(hModule, selfPath, MAX_PATH);" EL
-		"		std::string moduleDir(selfPath);" EL
-		"		size_t idx = moduleDir.find_last_of('\\\\');" EL
-		"		moduleDir = moduleDir.substr(0, idx);" EL
-		"		std::string modulePath = moduleDir + \"\\\\\" + dllName;" EL
-		"		char curDir[MAX_PATH];" EL
-		"		::GetCurrentDirectoryA(MAX_PATH, curDir);" EL
-		"		::SetCurrentDirectoryA(moduleDir.c_str());" EL
-		"		HMODULE hDll = LoadLibraryA(modulePath.c_str());" EL
-		"		::SetCurrentDirectoryA(curDir);" EL
+		"		HMODULE hDll = LoadLibraryA(dllName);" EL
+		"		if (!hDll)" EL
+		"		{" EL
+		"			char selfPath[MAX_PATH];" EL
+		"			MEMORY_BASIC_INFORMATION mbi;" EL
+		"			HMODULE hModule = ((::VirtualQuery(LoadLibraryFromCurrentDir, &mbi, sizeof(mbi)) != 0) ? " EL
+		"				(HMODULE)mbi.AllocationBase : NULL);" EL
+		"			::GetModuleFileNameA(hModule, selfPath, MAX_PATH);" EL
+		"			std::string moduleDir(selfPath);" EL
+		"			size_t idx = moduleDir.find_last_of('\\\\');" EL
+		"			moduleDir = moduleDir.substr(0, idx);" EL
+		"			std::string modulePath = moduleDir + \"\\\\\" + dllName;" EL
+		"			char curDir[MAX_PATH];" EL
+		"			::GetCurrentDirectoryA(MAX_PATH, curDir);" EL
+		"			::SetCurrentDirectoryA(moduleDir.c_str());" EL
+		"			hDll = LoadLibraryA(modulePath.c_str());" EL
+		"			::SetCurrentDirectoryA(curDir);" EL
+		"		}" EL
+		"" EL
 		"		if (!hDll)" EL
 		"		{" EL
 		"			DWORD err = ::GetLastError();" EL
 		"			char buf[10];" EL
 		"			sprintf_s(buf, \"%u\", err);" EL
-		"			::MessageBoxA(NULL, (\"找不到\" + modulePath + \"模块:\" + buf).c_str(), \"找不到模块\", MB_OK | MB_ICONERROR);" EL
+		"			::MessageBoxA(NULL, (std::string(\"找不到\") + dllName + \"模块:\" + buf).c_str()," EL
+		"				\"找不到模块\", MB_OK | MB_ICONERROR);" EL
 		"		}" EL
 		"		return hDll;" EL
 		"	}" << std::endl;
